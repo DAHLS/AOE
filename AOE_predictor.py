@@ -8,16 +8,27 @@ Created on Mon Aug 25 17:16:12 2025
 
 import pandas as pd
 import joblib
+import datetime
+import sys
 
-new_df = pd.read_excel('Slutsoegning/2025/slutsogning_2025_spring_wip.xlsx')
+try:
+    data_path = sys.argv[1]
+except IndexError:
+    print("Please provide path to data for estimation.")
+    sys.exit()
+#'Slutsoegning/2025/slutsogning_2025_spring_wip.xlsx'
+
+new_df = pd.read_excel(data_path)
 new_df['Text'] = new_df[['AU', 'TI', 'JN']].apply(
     lambda row: ' '.join(row.dropna()), axis=1)
 
-#TODO add more flexiable model picking
+#TODO add more flexiable model choice 
 knn = joblib.load('models/orgafill_kNN-model.pkl')
 vectorizer = joblib.load('models/orgaffil_tfidf-bow.pkl')
 X_new = vectorizer.transform(new_df['Text'])
 
 predicted_labels = knn.predict(X_new)
+
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 new_df['Predicted_Orgs_parents'] = predicted_labels
-new_df.to_excel('labeled_new_data.xlsx', index=False)
+new_df.to_excel(f'output/{data_path.split('/')[-1].split('.')[0]}_labeled_{timestamp}.xlsx', index=False)

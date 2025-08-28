@@ -8,7 +8,7 @@ import pandas as pd
 #import pickle
 #from sklearn.feature_extraction.text import TfidfVectorizer
 
-pure_df = pd.read_excel('Org_dump.xlsx')
+pure_df = pd.read_excel('data/Org_dump.xlsx')
 pure_df.dropna(subset=['Orgs_parents'], inplace=True) 
 
 #Reduce organization data to faculty affiliation
@@ -37,14 +37,4 @@ pure_df['Text'] = pure_df[['Person', 'Title', 'Subtitle', 'Abs', 'Jn', 'Tihost']
     lambda row: ' '.join(row.dropna()), axis=1)
 
 #Dump the processed pure data
-pure_df.to_excel('Org_dump_processed.xlsx', index=False)
-
-"""
-#Create tfidf BoW of pure text data
-vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1,2))
-tfidf_matrix = vectorizer.fit_transform(pure_df['Text'])
-
-#Dump BoW model
-with open('Org_dump_tfidf_vectorizer.pkl', 'wb') as file:
-    pickle.dump(tfidf_matrix, file)
-"""
+pure_df.to_excel('data/Org_dump_processed.xlsx', index=False)
