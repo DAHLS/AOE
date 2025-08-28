@@ -1,0 +1,5 @@
+SCOPUS:
+AF-ID ( "Københavns Universitet"  60030840 ) AND NOT AFFIL ( hosp* ) AND ( LIMIT-TO ( PUBYEAR , 2022 ) ) AND ( EXCLUDE ( AF-ID , "Rigshospitalet"  60006564 ) OR EXCLUDE ( AF-ID , "IT-Universitetet i København"  60018567 ) )			
+
+WOS:
+University of Copenhagen (Affiliation) not hosp* (Affiliation) not IT University Copenhagen (Affiliation) and 2022 (Publication Years) and BISPEBJERG HOSPITAL or RIGSHOSPITALET (Exclude – Affiliations)				

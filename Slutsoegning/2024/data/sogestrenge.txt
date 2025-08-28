@@ -1,0 +1,5 @@
+SCOPUS:
+AF-ID ( "Københavns Universitet" 60030840 ) AND NOT AFFIL ( hosp* ) AND ( EXCLUDE ( AF-ID , "Rigshospitalet" 60006564 ) OR EXCLUDE ( AF-ID , "IT-Universitetet i København" 60018567 ) ) AND ( LIMIT-TO ( PUBYEAR , 2023 ) OR LIMIT-TO ( PUBYEAR , 2024 ) OR LIMIT-TO ( PUBYEAR , 2025 ) )
+
+WOS:
+(OG=University of Copenhagen) NOT (OG=hosp* OR OG=IT University Copenhagen OR OG=BISPEBJERG HOSPITAL OR OG=RIGSHOSPITALET)

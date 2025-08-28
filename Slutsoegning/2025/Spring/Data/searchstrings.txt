@@ -1,0 +1,10 @@
+Search strings for end search 2025, spring.
+
+Scopus:
+( AF-ID ( "K&#248;benhavns Universitet" 60030840 ) OR AF-ID ( "Det Sundhedsvidenskabelige Fakultet" 60013332 ) OR AF-ID ( "Det Natur- og Biovidenskabelige Fakultet" 60007971 ) OR AF-ID ( "Panum Institute" 60017344 ) OR AF-ID ( "Statens Naturhistoriske Museum" 60095975 ) OR AF-ID ( "School of Pharmaceutical Sciences" 60016128 ) OR AF-ID ( "H. C. &#216;rsted Institute" 60033202 ) OR AF-ID ( "Novo Nordisk Foundation Center for Basic Metabolic Research" 60253102 ) OR AF-ID ( "Tandl&#230;geskolen" 60021141 ) OR AF-ID ( "Institute of Molecular Biology and Physiology The August Krogh Building" 60004783 ) OR AF-ID ( "Biotech Research & Innovation Centre" 60083854 ) OR AF-ID ( "Dark Cosmology Centre" 60095454 ) OR AF-ID ( "Novo Nordisk Foundation Center for Protein Research" 60253253 ) OR AF-ID ( "Copenhagen University Observatory" 60007464 ) OR AF-ID ( "Freshwater Biological Laboratory" 60029439 ) OR AF-ID ( "Danish Centre for Forest Landscape and Planning" 60033219 ) OR AF-ID ( "Institut for Matematiske Fag" 60070871 ) OR AF-ID ( "Institut for F&#248;devare- og Ressource&#248;konomi IFRO" 60007759 ) ) AND ( EXCLUDE ( DOCTYPE , "er" ) ) AND ( LIMIT-TO ( PUBYEAR , 2024 ) ) AND ( EXCLUDE ( AF-ID , "Rigshospitalet" 60006564 ) )
+
+WoS:
+(OG=University of Copenhagen)
+
+CURIS:
+slutsøgning 25 spring rapporten
