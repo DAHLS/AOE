@@ -11,12 +11,12 @@ import joblib
 import datetime
 import sys
 
-try:
-    data_path = sys.argv[1]
-except IndexError:
+
+#'Slutsoegning/2025/slutsogning_2025_spring_wip.xlsx'
+if len(sys.argv) < 2:
     print("Please provide path to data for estimation.")
     sys.exit()
-#'Slutsoegning/2025/slutsogning_2025_spring_wip.xlsx'
+data_path = sys.argv[1]
 
 new_df = pd.read_excel(data_path)
 new_df['Text'] = new_df[['AU', 'TI', 'JN']].apply(

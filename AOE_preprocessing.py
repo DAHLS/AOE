@@ -4,11 +4,19 @@ Preprocessing of PURE report Org dump, as defined by Org_dump.json
 Containing information about article affiliation
 """
 
+import sys
+import datetime
 import pandas as pd
 #import pickle
 #from sklearn.feature_extraction.text import TfidfVectorizer
 
-pure_df = pd.read_excel('data/Org_dump.xlsx')
+#'data/Org_dump.xlsx'
+if len(sys.argv) < 2:
+   print('Requires path to CURIS data')
+   sys.exit()
+data_path = sys.argv[1] 
+
+pure_df = pd.read_excel(data_path)
 pure_df.dropna(subset=['Orgs_parents'], inplace=True) 
 
 #Reduce organization data to faculty affiliation
@@ -37,4 +45,5 @@ pure_df['Text'] = pure_df[['Person', 'Title', 'Subtitle', 'Abs', 'Jn', 'Tihost']
     lambda row: ' '.join(row.dropna()), axis=1)
 
 #Dump the processed pure data
-pure_df.to_excel('data/Org_dump_processed.xlsx', index=False)
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+pure_df.to_excel(f'data/{data_path.split('/')[-1].split('.')[0]}_processed_{timestamp}.xlsx', index=False)
