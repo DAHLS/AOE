@@ -5,7 +5,7 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 from sklearn.preprocessing import LabelEncoder
 import argparse
 import warnings
@@ -41,7 +41,7 @@ ALGORITHM_CONFIGS = {
 
 def load_and_preprocess_data():
     # This is a placeholder - replace with your actual data loading logic
-    pure_df = pd.read_excel('data/Org_dump_processed_20250901_184851.xlsx')
+    pure_df = pd.read_excel('data/Org_dump_processed.xlsx')
     texts = pure_df['Text']
     labels = pure_df['Orgs_parents']
     #[1, 1, 0, 0]  # 1 for positive, 0 for negative
@@ -64,19 +64,17 @@ def evaluate_model(model, X_test, y_test, predict_func):
     accuracy = accuracy_score(y_test, predictions)
     precision = precision_score(y_test, predictions, average='weighted')
     recall = recall_score(y_test, predictions, average='weighted')
-    f1 = f1_score(y_test, predictions, average='weighted')
-    
+    f1 = f1_score(y_test, predictions, average='weighted')   
     return {
         'accuracy': accuracy,
         'precision': precision,
         'recall': recall,
         'f1': f1,
-        'predictions': predictions
+        'predictions': predictions,
     }
 
 def run_algorithm_comparison(X_train, X_test, y_train, y_test, algorithms_config):
     results = {}
-    
     for algo_name, config in algorithms_config.items():
         print("Testing " + algo_name + "...")
         
@@ -104,13 +102,13 @@ def run_algorithm_comparison(X_train, X_test, y_train, y_test, algorithms_config
                     'precision': evaluation['precision'],
                     'recall': evaluation['recall'],
                     'f1': evaluation['f1'],
-                    'predictions': evaluation['predictions']
+                    'predictions': evaluation['predictions'],
                 }
-                print("  Accuracy: " + str(evaluation['accuracy']))
+                print(f"{algo_name} Report: \n" + 
+                      str(classification_report(y_test, evaluation['predictions'])))
         except Exception as e:
             print("Error evaluating " + algo_name + ": " + str(e))
             continue
-    
     return results
 
 def compare_results(results_dict):
@@ -129,7 +127,7 @@ def compare_results(results_dict):
     print("\n" + "="*60)
     print("ALGORITHM COMPARISON RESULTS")
     print("="*60)
-    print(df.sort_values('Accuracy', ascending=False))
+    print(df.sort_values('F1-Score', ascending=False))
     return df
 
 def save_results(results, filename='algorithm_comparison.csv'):
@@ -157,65 +155,16 @@ def tune_hyperparameters(X_train, y_train, algorithm_config):
         print("Error in hyperparameter tuning: " + str(e))
         return None, None
 
-"""
-def main():
-    # Load and preprocess data
-    print("Loading and preprocessing data...")
-    try:
-        texts, labels = load_and_preprocess_data()
-        # Create bag-of-words features
-        X, vectorizer = create_bow_features(texts, vectorizer_type='count')
-        
-        # Encode labels if needed
-        le = LabelEncoder()
-        y = le.fit_transform(labels)
-        
-        # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
-        
-        print("Training set size: " + str(X_train.shape))
-        print("Test set size: " + str(X_test.shape))
-        
-    except Exception as e:
-        print("Error in data loading/preprocessing: " + str(e))
-        return
-    
-    # Run algorithm comparison
-    print("\nStarting algorithm comparison...")
-    
-    # Choose which algorithms to test
-    selected_algorithms = ['svm', 'random_forest', 'logistic_regression']
-    
-    # Filter configs for selected algorithms
-    configs = {name: ALGORITHM_CONFIGS[name] for name in selected_algorithms 
-               if name in ALGORITHM_CONFIGS}
-    
-    if not configs:
-        print("No valid algorithms selected")
-        return
-    
-    results = run_algorithm_comparison(X_train, X_test, y_train, y_test, configs)
-    
-    if not results:
-        print("No algorithms completed successfully")
-        return
-    
-    # Display and save results
-    compare_results(results)
-    save_results(results)
-    
-    return results
-"""
 
 def main_with_args():
     parser = argparse.ArgumentParser(description='Compare ML algorithms on AOE data')
-    parser.add_argument('--algorithms', nargs='+', 
+    parser.add_argument('--algo', nargs='+', 
                        choices=['svm', 'random_forest', 'logistic_regression', 'kNN', 'all'],
                        default=['all'],
                        help='Algorithms to test')
-    
+    parser.add_argument('--feat', nargs='?',
+                        default=None, type=int,
+                        help='Model size')
     args = parser.parse_args()
     
     # Load and preprocess data
@@ -225,18 +174,18 @@ def main_with_args():
         
         # Create bag-of-words features
         X, vectorizer = create_bow_features(texts, vectorizer_type='tfidf',
-                                            max_features=1000000)
+                                            max_features=args.feat)
         
-        # Encode labels if needed
-        le = LabelEncoder()
-        y = le.fit_transform(labels)
+        ## Encode labels if needed
+        #le = LabelEncoder()
+        #y = le.fit_transform(labels)
+        y = labels.values
         
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(X, y, 
                                                             test_size=0.2,
                                                             random_state=42,
                                                             stratify=y)
-        
         print("Training set size: " + str(X_train.shape))
         print("Test set size: " + str(X_test.shape))
         
@@ -245,10 +194,10 @@ def main_with_args():
         return
     
     # Determine which algorithms to run
-    if 'all' in args.algorithms:
+    if 'all' in args.algo:
         configs = ALGORITHM_CONFIGS
     else:
-        configs = {name: ALGORITHM_CONFIGS[name] for name in args.algorithms 
+        configs = {name: ALGORITHM_CONFIGS[name] for name in args.algo 
                    if name in ALGORITHM_CONFIGS}
     
     print("Testing algorithms: " + str(list(configs.keys())))
@@ -257,7 +206,7 @@ def main_with_args():
     results = run_algorithm_comparison(X_train, X_test, y_train, y_test, configs)
     
     if results:
-        compare_results(results)
+        #compare_results(results)
         save_results(results)
     else:
         print("No algorithms completed successfully")
