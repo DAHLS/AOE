@@ -54,8 +54,7 @@ def create_bow_features(texts, vectorizer_type='count',
                                      ngram_range=(1,ngrams))
     else:
         vectorizer = CountVectorizer(max_features=max_features, stop_words='english',
-                                     ngram_range=(1,ngrams))
-    
+                                     ngram_range=(1,ngrams))  
     X = vectorizer.fit_transform(texts)
     return X, vectorizer
 
@@ -76,22 +75,19 @@ def evaluate_model(model, X_test, y_test, predict_func):
 def run_algorithm_comparison(X_train, X_test, y_train, y_test, algorithms_config):
     results = {}
     for algo_name, config in algorithms_config.items():
-        print("Testing " + algo_name + "...")
-        
+        print("Testing " + algo_name + "...")      
         # Create model instance
         try:
             model = config['class']()
         except Exception as e:
             print("Error creating " + algo_name + ": " + str(e))
-            continue
-        
+            continue        
         # Train model
         try:
             config['train_func'](model, X_train, y_train)
         except Exception as e:
             print("Error training " + algo_name + ": " + str(e))
-            continue
-        
+            continue     
         # Predict and evaluate
         try:
             evaluation = evaluate_model(model, X_test, y_test, config['predict_func'])
@@ -112,8 +108,7 @@ def run_algorithm_comparison(X_train, X_test, y_train, y_test, algorithms_config
     return results
 
 def compare_results(results_dict):
-    df_results = []
-    
+    df_results = []   
     for algo_name, result in results_dict.items():
         df_results.append({
             'Algorithm': algo_name,
@@ -122,7 +117,6 @@ def compare_results(results_dict):
             'Recall': result['recall'],
             'F1-Score': result['f1']
         })
-    
     df = pd.DataFrame(df_results)
     print("\n" + "="*60)
     print("ALGORITHM COMPARISON RESULTS")
@@ -138,7 +132,6 @@ def save_results(results, filename='algorithm_comparison.csv'):
 def tune_hyperparameters(X_train, y_train, algorithm_config):
     model_class = algorithm_config['class']
     param_grid = algorithm_config['params']
-    
     try:
         grid_search = GridSearchCV(
             model_class(), 
@@ -148,7 +141,6 @@ def tune_hyperparameters(X_train, y_train, algorithm_config):
             n_jobs=-1,
             verbose=0
         )
-        
         grid_search.fit(X_train, y_train)
         return grid_search.best_estimator_, grid_search.best_params_
     except Exception as e:
@@ -173,14 +165,9 @@ def main_with_args():
         texts, labels = load_and_preprocess_data()
         
         # Create bag-of-words features
+        y = labels.values
         X, vectorizer = create_bow_features(texts, vectorizer_type='tfidf',
                                             max_features=args.feat)
-        
-        ## Encode labels if needed
-        #le = LabelEncoder()
-        #y = le.fit_transform(labels)
-        y = labels.values
-        
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(X, y, 
                                                             test_size=0.2,
