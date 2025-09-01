@@ -63,7 +63,3 @@ y_pred = classifier.predict(X_test)
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 joblib.dump(vectorizer, f'models/AOE_tfidf-bow_{timestamp}.pkl')
 joblib.dump(classifier, f'models/AOE_{classifier_type}-model_{timestamp}.pkl')
-
-print(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
