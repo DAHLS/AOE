@@ -4,11 +4,11 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.preprocessing import LabelEncoder
 import argparse
 import warnings
-import joblib
 warnings.filterwarnings('ignore')
 
 # Algorithm configuration dictionary
@@ -28,6 +28,12 @@ ALGORITHM_CONFIGS = {
     'logistic_regression': {
         'class': LogisticRegression,
         'params': {'C': [0.1, 1.0, 10.0], 'penalty': ['l1', 'l2']},
+        'train_func': lambda model, X_train, y_train: model.fit(X_train, y_train),
+        'predict_func': lambda model, X_test: model.predict(X_test)
+    },
+    'kNN': {
+        'class': KNeighborsClassifier,
+        'params': {'n_neighbors': 5},
         'train_func': lambda model, X_train, y_train: model.fit(X_train, y_train),
         'predict_func': lambda model, X_test: model.predict(X_test)
     }

@@ -39,6 +39,20 @@ replacements = {
 }
 
 pure_df['Orgs_parents'] = pure_df['Orgs_parents'].replace(replacements)
+pure_df = pure_df[~pure_df.apply(lambda row: 'Københavns Universitet' in row.values, axis=1)]
+
+#"""
+dry_or_wet = {
+    "Faculty of Health and Medical Sciences": "wet",
+                     "Faculty of Humanities": "dry",
+                            "Faculty of Law": "dry", 
+                        "Faculty of Science": "wet",
+                "Faculty of Social Sciences": "dry", 
+                       "Faculty of Theology": "dry",
+                    "Københavns Universitet": "indeterminate"
+}
+pure_df['area'] = pure_df['Orgs_parents'].replace(dry_or_wet)
+#"""
 
 #Combine textual data for modeling
 pure_df['Text'] = pure_df[['Person', 'Title', 'Subtitle', 'Abs', 'Jn', 'Tihost']].apply(

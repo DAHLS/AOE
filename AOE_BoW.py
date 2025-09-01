@@ -38,6 +38,26 @@ classifier = KNeighborsClassifier(n_neighbors=5)
 classifier.fit(X_train, y_train)
 y_pred = classifier.predict(X_test)
 
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+
+###
+
+y = pure_df['area'].values
+X = tfidf_matrix
+
+X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                    stratify=y,
+                                                    test_size=0.2,
+                                                    random_state=42)
+
+classifier_type = 'kNN'
+classifier = KNeighborsClassifier(n_neighbors=5)
+classifier.fit(X_train, y_train)
+y_pred = classifier.predict(X_test)
+
 #Save trained model and tfidf vectorization
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 joblib.dump(vectorizer, f'models/AOE_tfidf-bow_{timestamp}.pkl')
