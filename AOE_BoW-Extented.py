@@ -210,7 +210,7 @@ def main():
 def main_with_args():
     parser = argparse.ArgumentParser(description='Compare ML algorithms on AOE data')
     parser.add_argument('--algorithms', nargs='+', 
-                       choices=['svm', 'random_forest', 'logistic_regression', 'all'],
+                       choices=['svm', 'random_forest', 'logistic_regression', 'kNN', 'all'],
                        default=['all'],
                        help='Algorithms to test')
     
