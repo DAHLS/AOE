@@ -8,6 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 import argparse
 import warnings
+import pickle
 warnings.filterwarnings('ignore')
 
 # Algorithm configuration dictionary
@@ -71,6 +72,12 @@ def evaluate_model(model, X_test, y_test, predict_func):
         'predictions': predictions,
     }
 
+def save_model(model, filename):
+    """Save a trained model to pickle file"""
+    with open('models/' + filename, 'wb') as f:
+        pickle.dump(model, f)
+    print(f"Model saved to {filename}")
+
 def run_algorithm_comparison(X_train, X_test, y_train, y_test, algorithms_config):
     results = {}
     for algo_name, config in algorithms_config.items():
@@ -101,6 +108,8 @@ def run_algorithm_comparison(X_train, X_test, y_train, y_test, algorithms_config
                 }
                 print(f"{algo_name} Report: \n" + 
                       str(classification_report(y_test, evaluation['predictions'])))
+                model_filename = f"{algo_name}_model.pkl"
+                save_model(model, model_filename)
         except Exception as e:
             print("Error evaluating " + algo_name + ": " + str(e))
             continue
