@@ -8,6 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 import argparse
 import warnings
+import datetime
 import pickle
 warnings.filterwarnings('ignore')
 
@@ -74,7 +75,8 @@ def evaluate_model(model, X_test, y_test, predict_func):
 
 def save_model(model, filename):
     """Save a trained model to pickle file"""
-    with open('models/' + filename, 'wb') as f:
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    with open('models/' + f'{timestamp}' + filename, 'wb') as f:
         pickle.dump(model, f)
     print(f"Model saved to {filename}")
 
@@ -200,11 +202,9 @@ def main_with_args():
     # Run algorithm comparison
     results = run_algorithm_comparison(X_train, X_test, y_train, y_test, configs)
     
-    if results:
-        #compare_results(results)
+    if results and len(results) > 1:
         save_results(results)
-    else:
-        print("No algorithms completed successfully")
-
+    
+    
 if __name__ == "__main__":
     main_with_args()
