@@ -41,14 +41,14 @@ ALGORITHM_CONFIGS = {
 
 def load_and_preprocess_data():
     # This is a placeholder - replace with your actual data loading logic
-    pure_df = pd.read_excel('data/Org_dump_processed.xlsx')
+    pure_df = pd.read_excel('data/Org_dump_processed_20250901_184851.xlsx')
     texts = pure_df['Text']
     labels = pure_df['Orgs_parents']
     #[1, 1, 0, 0]  # 1 for positive, 0 for negative
     return texts, labels
 
-def create_bow_features(texts, vectorizer_type='tfidf', 
-                        max_features=1000, ngrams=2):
+def create_bow_features(texts, vectorizer_type='count', 
+                        max_features=None, ngrams=2):
     if vectorizer_type == 'tfidf':
         vectorizer = TfidfVectorizer(max_features=max_features, stop_words='english',
                                      ngram_range=(1,ngrams))
@@ -157,6 +157,7 @@ def tune_hyperparameters(X_train, y_train, algorithm_config):
         print("Error in hyperparameter tuning: " + str(e))
         return None, None
 
+"""
 def main():
     # Load and preprocess data
     print("Loading and preprocessing data...")
@@ -206,6 +207,7 @@ def main():
     save_results(results)
     
     return results
+"""
 
 def main_with_args():
     parser = argparse.ArgumentParser(description='Compare ML algorithms on AOE data')
@@ -222,16 +224,18 @@ def main_with_args():
         texts, labels = load_and_preprocess_data()
         
         # Create bag-of-words features
-        X, vectorizer = create_bow_features(texts, vectorizer_type='count')
+        X, vectorizer = create_bow_features(texts, vectorizer_type='tfidf',
+                                            max_features=1000000)
         
         # Encode labels if needed
         le = LabelEncoder()
         y = le.fit_transform(labels)
         
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y
-        )
+        X_train, X_test, y_train, y_test = train_test_split(X, y, 
+                                                            test_size=0.2,
+                                                            random_state=42,
+                                                            stratify=y)
         
         print("Training set size: " + str(X_train.shape))
         print("Test set size: " + str(X_test.shape))
