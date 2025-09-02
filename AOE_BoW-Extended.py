@@ -80,7 +80,8 @@ def save_model(model, filename):
         pickle.dump(model, f)
     print(f"Model saved to {filename}")
 
-def run_algorithm_comparison(X_train, X_test, y_train, y_test, algorithms_config):
+def run_algorithm_comparison(X_train, X_test, y_train, y_test, 
+                             algorithms_config, save_model='n'):
     results = {}
     for algo_name, config in algorithms_config.items():
         print("Testing " + algo_name + "...")      
@@ -110,8 +111,10 @@ def run_algorithm_comparison(X_train, X_test, y_train, y_test, algorithms_config
                 }
                 print(f"{algo_name} Report: \n" + 
                       str(classification_report(y_test, evaluation['predictions'])))
-                model_filename = f"{algo_name}_model.pkl"
-                save_model(model, model_filename)
+                if save_model == 'y':
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    model_filename = f"{algo_name}_model_{timestamp}.pkl"
+                    save_model(model, model_filename)
         except Exception as e:
             print("Error evaluating " + algo_name + ": " + str(e))
             continue
@@ -161,12 +164,13 @@ def tune_hyperparameters(X_train, y_train, algorithm_config):
 def main_with_args():
     parser = argparse.ArgumentParser(description='Compare ML algorithms on AOE data')
     parser.add_argument('--algo', nargs='+', 
-                       choices=['svm', 'random_forest', 'logistic_regression', 'kNN', 'all'],
-                       default=['all'],
-                       help='Algorithms to test')
-    parser.add_argument('--feat', nargs='?',
-                        default=None, type=int,
+                       choices=['svm', 'random_forest', 
+                                'logistic_regression', 'kNN', 'all'],
+                       default=['all'], help='Algorithms to test')
+    parser.add_argument('--feat', nargs='?', default=None, type=int,
                         help='Model size')
+    parser.add_argument('--savemodel', nargs = '?', choices=['y', 'n'],
+                        default=['n'], help='Save models to file')
     args = parser.parse_args()
     
     # Load and preprocess data
