@@ -204,7 +204,8 @@ def main_with_args():
     print("Testing algorithms: " + str(list(configs.keys())))
     
     # Run algorithm comparison
-    results = run_algorithm_comparison(X_train, X_test, y_train, y_test, configs)
+    results = run_algorithm_comparison(X_train, X_test, y_train, y_test, 
+                                       configs, save_model=args.savemodel)
     
     if results and len(results) > 1:
         save_results(results)
