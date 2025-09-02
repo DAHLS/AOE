@@ -5,6 +5,9 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
 import argparse
 import warnings
@@ -34,7 +37,29 @@ ALGORITHM_CONFIGS = {
     },
     'kNN': {
         'class': KNeighborsClassifier,
-        'params': {'n_neighbors': 5},
+        'params': {'n_neighbors': [3, 5, 7, 9],
+                   'weights': ['uniform', 'distance']},
+        'train_func': lambda model, X_train, y_train: model.fit(X_train, y_train),
+        'predict_func': lambda model, X_test: model.predict(X_test)
+    },
+    'decision_tree': {
+        'class': DecisionTreeClassifier,
+        'params': {'max_depth': [3, 5, 10, None],
+                   'min_samples_split': [2, 5, 10]},
+        'train_func': lambda model, X_train, y_train: model.fit(X_train, y_train),
+        'predict_func': lambda model, X_test: model.predict(X_test)
+    },
+    'gradient_boosting': {
+        'class': GradientBoostingClassifier,
+        'params': {'n_estimators': [50, 100, 200],
+                   'learning_rate': [0.1, 0.05, 0.01],
+                   'max_depth': [3, 5, 7]},
+        'train_func': lambda model, X_train, y_train: model.fit(X_train, y_train),
+        'predict_func': lambda model, X_test: model.predict(X_test)
+    },
+    'naive_bayes': {
+        'class': GaussianNB,  # This is from sklearn.naive_bayes
+        'params': {'var_smoothing': [1e-9, 1e-8, 1e-7]},
         'train_func': lambda model, X_train, y_train: model.fit(X_train, y_train),
         'predict_func': lambda model, X_test: model.predict(X_test)
     }
@@ -58,6 +83,38 @@ def create_bow_features(texts, vectorizer_type='count',
                                      ngram_range=(1,ngrams))  
     X = vectorizer.fit_transform(texts)
     return X, vectorizer
+
+def tune_hyperparameters(X_train, y_train, algorithm_config, algorithm_name):
+    """Perform hyperparameter tuning using GridSearchCV"""
+    print(f"Starting hyperparameter tuning for {algorithm_name}...")
+    
+    model_class = algorithm_config['class']
+    param_grid = algorithm_config['params']
+    
+    try:
+        # Create GridSearchCV object
+        grid_search = GridSearchCV(
+            model_class(), 
+            param_grid, 
+            cv=3,  # Use 3-fold cross-validation
+            scoring='accuracy',
+            n_jobs=-1,  # Use all available cores
+            verbose=1
+        )
+        
+        # Fit the grid search
+        grid_search.fit(X_train, y_train)
+        
+        print(f"Best parameters for {algorithm_name}: {grid_search.best_params_}")
+        print(f"Best cross-validation score: {grid_search.best_score_:.4f}")
+        
+        # Return the best model
+        return grid_search.best_estimator_
+        
+    except Exception as e:
+        print(f"Error during hyperparameter tuning for {algorithm_name}: {e}")
+        return None
+    
 
 def evaluate_model(model, X_test, y_test, predict_func):
     predictions = predict_func(model, X_test)
@@ -87,7 +144,13 @@ def run_algorithm_comparison(X_train, X_test, y_train, y_test,
         print("Testing " + algo_name + "...")      
         # Create model instance
         try:
-            model = config['class']()
+            #model = config['class']()
+            print(f"Performing hyperparameter tuning for {algo_name}...")
+            tuned_model = tune_hyperparameters(X_train, y_train, config, algo_name)
+            if tuned_model is None:
+                print(f"Skipping {algo_name} due to tuning error")
+                continue
+            model = tuned_model
         except Exception as e:
             print("Error creating " + algo_name + ": " + str(e))
             continue        
@@ -141,24 +204,6 @@ def save_results(results, filename='algorithm_comparison.csv'):
     df = compare_results(results)
     df.to_csv(filename, index=False)
     print("\nResults saved to " + filename)
-
-def tune_hyperparameters(X_train, y_train, algorithm_config):
-    model_class = algorithm_config['class']
-    param_grid = algorithm_config['params']
-    try:
-        grid_search = GridSearchCV(
-            model_class(), 
-            param_grid, 
-            cv=5, 
-            scoring='accuracy',
-            n_jobs=-1,
-            verbose=0
-        )
-        grid_search.fit(X_train, y_train)
-        return grid_search.best_estimator_, grid_search.best_params_
-    except Exception as e:
-        print("Error in hyperparameter tuning: " + str(e))
-        return None, None
 
 
 def main_with_args():
