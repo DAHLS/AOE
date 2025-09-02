@@ -138,19 +138,21 @@ def save_model(model, filename):
     print(f"Model saved to {filename}")
 
 def run_algorithm_comparison(X_train, X_test, y_train, y_test, 
-                             algorithms_config, save_model='n'):
+                             algorithms_config, save_model='n', hyperp='n'):
     results = {}
     for algo_name, config in algorithms_config.items():
         print("Testing " + algo_name + "...")      
         # Create model instance
         try:
-            #model = config['class']()
-            print(f"Performing hyperparameter tuning for {algo_name}...")
-            tuned_model = tune_hyperparameters(X_train, y_train, config, algo_name)
-            if tuned_model is None:
-                print(f"Skipping {algo_name} due to tuning error")
-                continue
-            model = tuned_model
+            if hyperp == 'y':
+                print(f"Performing hyperparameter tuning for {algo_name}...")
+                tuned_model = tune_hyperparameters(X_train, y_train, config, algo_name)
+                if tuned_model is None:
+                    print(f"Skipping {algo_name} due to tuning error")
+                    continue
+                model = tuned_model
+            else:
+                model = config['class']()
         except Exception as e:
             print("Error creating " + algo_name + ": " + str(e))
             continue        
@@ -214,8 +216,10 @@ def main_with_args():
                        default=['all'], help='Algorithms to test')
     parser.add_argument('--feat', nargs='?', default=None, type=int,
                         help='Model size')
-    parser.add_argument('--savemodel', nargs = '?', choices=['y', 'n'],
+    parser.add_argument('--savemodel', nargs='?', choices=['y', 'n'],
                         default=['n'], help='Save models to file')
+    parser.add_argument('--hyperpara', nargs='?', choices=['y', 'n'],
+                        default=['n'], help='Enable hyperparameter tuning')
     args = parser.parse_args()
     
     # Load and preprocess data
@@ -249,8 +253,8 @@ def main_with_args():
     print("Testing algorithms: " + str(list(configs.keys())))
     
     # Run algorithm comparison
-    results = run_algorithm_comparison(X_train, X_test, y_train, y_test, 
-                                       configs, save_model=args.savemodel)
+    results = run_algorithm_comparison(X_train, X_test, y_train, y_test, configs,
+                                       save_model=args.savemodel, hyperp=args.hyperpara)
     
     if results and len(results) > 1:
         save_results(results)
