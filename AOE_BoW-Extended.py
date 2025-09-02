@@ -56,12 +56,6 @@ ALGORITHM_CONFIGS = {
                    'max_depth': [3, 5, 7]},
         'train_func': lambda model, X_train, y_train: model.fit(X_train, y_train),
         'predict_func': lambda model, X_test: model.predict(X_test)
-    },
-    'naive_bayes': {
-        'class': GaussianNB,  # This is from sklearn.naive_bayes
-        'params': {'var_smoothing': [1e-9, 1e-8, 1e-7]},
-        'train_func': lambda model, X_train, y_train: model.fit(X_train, y_train),
-        'predict_func': lambda model, X_test: model.predict(X_test)
     }
 }
 
@@ -211,15 +205,14 @@ def save_results(results, filename='algorithm_comparison.csv'):
 def main_with_args():
     parser = argparse.ArgumentParser(description='Compare ML algorithms on AOE data')
     parser.add_argument('--algo', nargs='+', 
-                       choices=['svm', 'random_forest', 
-                                'logistic_regression', 'kNN', 'all'],
+                       choices=ALGORITHM_CONFIGS.keys() + ['all'],
                        default=['all'], help='Algorithms to test')
     parser.add_argument('--feat', nargs='?', default=None, type=int,
                         help='Model size')
     parser.add_argument('--savemodel', nargs='?', choices=['y', 'n'],
-                        default=['n'], help='Save models to file')
+                        default=['n'], help='Save models to file(y/n), default n')
     parser.add_argument('--hyperpara', nargs='?', choices=['y', 'n'],
-                        default=['n'], help='Enable hyperparameter tuning')
+                        default=['n'], help='Enable hyperparameter tuning(y/n), default n')
     args = parser.parse_args()
     
     # Load and preprocess data
