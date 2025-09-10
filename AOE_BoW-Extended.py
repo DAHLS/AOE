@@ -5,7 +5,6 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
@@ -205,7 +204,7 @@ def save_results(results, filename='algorithm_comparison.csv'):
 def main_with_args():
     parser = argparse.ArgumentParser(description='Compare ML algorithms on AOE data')
     parser.add_argument('--algo', nargs='+', 
-                       choices=ALGORITHM_CONFIGS.keys() + ['all'],
+                       choices=list(ALGORITHM_CONFIGS.keys()) + ['all'],
                        default=['all'], help='Algorithms to test')
     parser.add_argument('--feat', nargs='?', default=None, type=int,
                         help='Model size')
