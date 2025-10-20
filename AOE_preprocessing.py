@@ -17,7 +17,12 @@ if len(sys.argv) < 2:
 data_path = sys.argv[1] 
 
 pure_df = pd.read_excel(data_path)
-pure_df.dropna(subset=['Orgs_parents'], inplace=True) 
+pure_df.dropna(subset=['Orgs_parents'], inplace=True)
+
+
+#Remove publications with no organizational affiliation with KU
+pure_df = pure_df[pure_df['Number of Orgs'] != 0]
+pure_df.drop(columns=['Number of Orgs'], inplace=True)
 
 #Reduce organization data to faculty affiliation
 def extract_parent_org(row):
@@ -41,7 +46,6 @@ replacements = {
 pure_df['Orgs_parents'] = pure_df['Orgs_parents'].replace(replacements)
 pure_df = pure_df[~pure_df.apply(lambda row: 'Københavns Universitet' in row.values, axis=1)]
 
-#"""
 stem_or_not = {
     "Faculty of Health and Medical Sciences": "stem",
                      "Faculty of Humanities": "non-stem",
@@ -52,7 +56,7 @@ stem_or_not = {
 }
 
 pure_df['Area'] = pure_df['Orgs_parents'].replace(stem_or_not)
-#"""
+
 
 #Combine textual data for modeling
 pure_df['Text'] = pure_df[['Person', 'Title', 'Subtitle', 'Abs', 'Jn', 'Tihost']].apply(

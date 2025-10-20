@@ -11,8 +11,10 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import argparse
 import warnings
 import datetime
-import pickle
+import joblib
 warnings.filterwarnings('ignore')
+
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Algorithm configuration dictionary
 ALGORITHM_CONFIGS = {
@@ -60,7 +62,7 @@ ALGORITHM_CONFIGS = {
 
 def load_and_preprocess_data():
     # This is a placeholder - replace with your actual data loading logic
-    pure_df = pd.read_excel('data/Org_dump_processed.xlsx')
+    pure_df = pd.read_excel('data/Org_dump-20251020_processed_20251020_172533.xlsx')
     texts = pure_df['Text']
     labels = pure_df['Orgs_parents']
     #[1, 1, 0, 0]  # 1 for positive, 0 for negative
@@ -122,14 +124,14 @@ def evaluate_model(model, X_test, y_test, predict_func):
         'f1': f1,
         'predictions': predictions,
     }
-
+"""
 def save_model(model, filename):
-    """Save a trained model to pickle file"""
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    with open('models/' + f'{timestamp}' + filename, 'wb') as f:
+    print('peekeeell')
+    #Save a trained model to pickle file
+    with open('models/' + filename, 'wb') as f:
         pickle.dump(model, f)
     print(f"Model saved to {filename}")
-
+"""
 def run_algorithm_comparison(X_train, X_test, y_train, y_test, 
                              algorithms_config, save_model='n', hyperp='n'):
     results = {}
@@ -170,9 +172,9 @@ def run_algorithm_comparison(X_train, X_test, y_train, y_test,
                 print(f"{algo_name} Report: \n" + 
                       str(classification_report(y_test, evaluation['predictions'])))
                 if save_model == 'y':
-                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                    model_filename = f"{algo_name}_model_{timestamp}.pkl"
-                    save_model(model, model_filename)
+                    #Save a trained model to pickle file
+                    joblib.dump(model, f'models/AOE_{algo_name}_{timestamp}.pkl')
+                    print("Model saved") #to {model_filename}")
         except Exception as e:
             print("Error evaluating " + algo_name + ": " + str(e))
             continue
@@ -212,7 +214,10 @@ def main_with_args():
                         default=['n'], help='Save models to file(y/n), default n')
     parser.add_argument('--hyperpara', nargs='?', choices=['y', 'n'],
                         default=['n'], help='Enable hyperparameter tuning(y/n), default n')
+    parser.add_argument('--production', nargs='?', choices=['y', 'n'],
+                        default=['n'], help='')
     args = parser.parse_args()
+
     
     # Load and preprocess data
     print("Loading and preprocessing data...")
@@ -223,11 +228,20 @@ def main_with_args():
         y = labels.values
         X, vectorizer = create_bow_features(texts, vectorizer_type='tfidf',
                                             max_features=args.feat)
+        if args.savemodel == 'y':
+            joblib.dump(vectorizer, 'models/AOE_tfidf-' + 
+                        "-".join(args.algo) + f'_{timestamp}.pkl')
+
         # Split data
+        if 'n' in args.production:
+            prod_state = 42
+        else:
+            prod_state = None
         X_train, X_test, y_train, y_test = train_test_split(X, y, 
                                                             test_size=0.2,
-                                                            random_state=42,
+                                                            random_state=prod_state,
                                                             stratify=y)
+            
         print("Training set size: " + str(X_train.shape))
         print("Test set size: " + str(X_test.shape))
         
