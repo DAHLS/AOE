@@ -10,78 +10,86 @@ import pandas as pd
 import joblib
 import datetime
 import sys
-
-
-#'Slutsoegning/2025/slutsogning_2025_spring_wip.xlsx'
-if len(sys.argv) < 2:
-    print("Please provide path to data for estimation.")
-    sys.exit()
-data_path = sys.argv[1]
-
-new_df = pd.read_excel(data_path)
-new_df['Text'] = new_df[['AU', 'TI', 'JN']].apply(
-    lambda row: ' '.join(row.dropna()), axis=1)
-
-#TODO add more flexiable model choice 
-knn = joblib.load('models/AOE_kNN-model_20250912_190303.pkl')
-vectorizer = joblib.load('models/AOE_tfidf-bow_20250912_190303.pkl')
-X_new = vectorizer.transform(new_df['Text'])
-
-predicted_labels = knn.predict(X_new)
-
-timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-new_df['Predicted_Org_parents'] = predicted_labels
-new_df.to_excel(f'output/{data_path.split('/')[-1].split('.')[0]}_labeled_{timestamp}.xlsx', index=False)
-
-"""
-import pandas as pd
-import joblib
-import datetime
-import sys
 import os
+import re
 import glob
 
-def select_file_from_directory(directory, file_extension, description):
-    #Prompts the user to select a file from a given directory based on extension,
-    #sorted by last modification time (newest first).
-    #
-    #Args:
-    #    directory (str): The directory to search in.
-    #    file_extension (str): The file extension to filter by (e.g., '.pkl').
-    #    description (str): A description of the file type for the prompt.
-    #
-    #Returns:
-    #    str: The full path to the selected file.
-    pattern = os.path.join(directory, f"*{file_extension}")
-    files = glob.glob(pattern)
 
-    if not files:
+def select_file_from_directory(directory, file_extension, description,
+                               include_pattern=None, exclude_pattern=None):
+    """
+    Prompts user to select a file from a directory based on extension and optional filename patterns.
+    
+    Args:
+        directory (str): Directory to search in.
+        file_extension (str): File extension to filter by (e.g., '.pkl').
+        description (str): Description for display/user prompt.
+        include_pattern (str, optional): If provided, only files *containing* this substring
+                                         (case/hyphen/underscore insensitive) in their filename are shown.
+                                         E.g., 'tfidf' matches 'tf-idf', 'T_F_IDF', etc.
+        exclude_pattern (str, optional): If provided, files *containing* this substring
+                                         (same flexible matching) are excluded.
+
+    Returns:
+        str: Full path to selected file.
+    """
+
+    # Helper: normalize string by removing non-alphanumeric chars and lowercasing
+    def normalize(s):
+        return re.sub(r'[^a-zA-Z0-9]', '', s).lower()
+
+    pattern = os.path.join(directory, f"*{file_extension}")
+    all_files = glob.glob(pattern)
+
+    if not all_files:
         print(f"Error: No {description} files found in '{directory}' with extension '{file_extension}'.")
         sys.exit()
 
-    # Sort files by modification time, newest first
-    files.sort(key=os.path.getmtime, reverse=True)
+    # Pre-normalize patterns for comparison
+    include_norm = normalize(include_pattern) if include_pattern else None
+    exclude_norm = normalize(exclude_pattern) if exclude_pattern else None
 
-    print(f"\nAvailable {description} files in '{directory}' (sorted by modification time, newest first):")
-    for i, file_path in enumerate(files):
+    filtered_files = []
+    for f in all_files:
+        filename = os.path.basename(f)
+        norm_filename = normalize(filename)
+
+        # Check inclusion/exclusion using normalized forms
+        if include_norm and include_norm not in norm_filename:
+            continue
+        if exclude_norm and exclude_norm in norm_filename:
+            continue
+        filtered_files.append(f)
+
+    if not filtered_files:
+        incl_desc = f'containing "{include_pattern}" ' if include_pattern else ""
+        excl_desc = f'not containing "{exclude_pattern}" ' if exclude_pattern else ""
+        print(f"Error: No {description} files found in '{directory}' matching "
+              f"{incl_desc}{excl_desc}(extension: '{file_extension}').")
+        sys.exit()
+
+    # Sort by modification time (newest first)
+    filtered_files.sort(key=os.path.getmtime, reverse=True)
+    print(f"\nAvailable {description} files in '{directory}' "
+          f"(sorted by modification time, newest first):")
+    for i, file_path in enumerate(filtered_files):
         filename = os.path.basename(file_path)
         mod_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S')
         print(f"  {i + 1}. {filename} (Modified: {mod_time})")
-
     while True:
         try:
-            choice = input(f"\nSelect the {description} number (1-{len(files)}): ")
+            choice = input(f"\nSelect the {description} number (1-{len(filtered_files)}): ")
             index = int(choice) - 1
-            if 0 <= index < len(files):
-                return files[index]
+            if 0 <= index < len(filtered_files):
+                return filtered_files[index]
             else:
-                print(f"Please enter a number between 1 and {len(files)}.")
+                print(f"Please enter a number between 1 and {len(filtered_files)}.")
         except ValueError:
             print("Please enter a valid number.")
         except KeyboardInterrupt:
             print("\nSelection cancelled by user.")
             sys.exit()
-
+            
 
 # --- Main Script Execution ---
 
@@ -96,13 +104,17 @@ new_df = pd.read_excel(data_path)
 new_df['Text'] = new_df[['AU', 'TI', 'JN']].apply(
     lambda row: ' '.join(row.dropna().astype(str)), axis=1) # Ensure all parts are strings before joining
 
-# 3. Prompt user to select the kNN model file
+# 3. Prompt user to select the model file
 print("\n--- Selecting Model File ---")
-model_path = select_file_from_directory('models', '.pkl', 'kNN Model')
+model_path = select_file_from_directory(
+    'models', '.pkl', 'kNN Model',
+    exclude_pattern='tfidf')
 
 # 4. Prompt user to select the TF-IDF vectorizer file
 print("\n--- Selecting Vectorizer File ---")
-vectorizer_path = select_file_from_directory('models', '.pkl', 'TF-IDF Vectorizer')
+vectorizer_path = select_file_from_directory(
+    'models', '.pkl', 'TF-IDF Vectorizer',
+    include_pattern='tfidf')
 
 # 5. Load the selected model and vectorizer
 print(f"\nLoading model from: {model_path}")
@@ -121,5 +133,3 @@ new_df['Predicted_Org_parents'] = predicted_labels
 new_df.to_excel(output_filename, index=False)
 
 print(f"\nPredictions completed and saved to: {output_filename}")
-
-"""
