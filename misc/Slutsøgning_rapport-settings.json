@@ -1,0 +1,140 @@
+{
+  "title": "Slutsøgning",
+  "description": null,
+  "category": "/dk/atira/pure/report/category/research_management",
+  "primaryDriverSystemNames": [
+    "ResearchOutput"
+  ],
+  "templateConfigurationKey": null,
+  "templateType": "NONE",
+  "sharingType": "NOT_SHARED",
+  "sharedWithUserIds": [],
+  "shareSnapshotsWithUserIds": [],
+  "sendNotifications": true,
+  "schedulingDefinition": null,
+  "locale": "en_GB",
+  "dataTableExportFormat": "CSV",
+  "shareDataStorySnapshot": true,
+  "dataTablesToExport": [],
+  "serializedReport": {
+    "version": "5.30.3-3",
+    "migration": 23,
+    "dataSet": null,
+    "dataSets": [
+      {
+        "id": "98e59d19-ab13-b29e-e8a2-2e7c74141f58",
+        "name": "Data table (1)",
+        "series": [
+          {
+            "id": "b07ebac7-8762-cd30-bde6-67d8b7b9df0c",
+            "systemName": "ResearchOutput",
+            "functions": [
+              {
+                "id": "9c67e1d0-26c7-e179-ccc2-8a23f3098a46",
+                "functionId": "ResearchOutput.project(persons)",
+                "type": "PROJECTION",
+                "emission": {
+                  "sampleSize": 100,
+                  "delimiter": " // "
+                },
+                "expanded": false,
+                "customLabel": "AU"
+              },
+              {
+                "id": "b099afd6-f00e-4e4d-939d-f3445ef8a4cb",
+                "functionId": "ResearchOutput.project(title)",
+                "type": "PROJECTION",
+                "customLabel": "TI"
+              },
+              {
+                "id": "79870d36-4b7b-cd11-6995-09e8f16efd9b",
+                "functionId": "ResearchOutput.project(journalTitle)",
+                "type": "PROJECTION",
+                "customLabel": "JN"
+              },
+              {
+                "id": "71f35ce2-b436-d826-09bc-84d8d7eacdf5",
+                "type": "PROJECTION",
+                "functionId": "ResearchOutput.project(electronicVersionDOI)",
+                "customLabel": "DOI"
+              }
+            ],
+            "filters": [
+              {
+                "filterId": "ResearchOutput.filter(currentPublicationStatusYear)",
+                "groupRef": "data-set-group",
+                "period": {
+                  "limitationType": "MATCH",
+                  "range": {
+                    "fromDate": {
+                      "year": 2023,
+                      "month": 3,
+                      "day": 9,
+                      "timezone": "Europe/Copenhagen"
+                    },
+                    "toDate": {
+                      "year": 2026,
+                      "month": 3,
+                      "day": 9,
+                      "timezone": "Europe/Copenhagen"
+                    }
+                  },
+                  "rangeType": "AUTOMATIC_RANGE",
+                  "typeOfPeriod": "CUSTOM_RANGE",
+                  "automaticRanges": "PREVIOUS_YEARS3"
+                }
+              },
+              {
+                "filterId": "ResearchOutput.filter(hasElectronicVersionDOI)",
+                "groupRef": "data-set-group",
+                "selectOne": {
+                  "limitationType": "MATCH",
+                  "value": "TRUE"
+                }
+              }
+            ],
+            "filterExpression": {
+              "version": 2,
+              "expression": [
+                {
+                  "exprId": "aea532b5-5fa4-629c-abb3-fa3ad6bcaa37",
+                  "expr": "VALUE",
+                  "ref": "ResearchOutput.filter(currentPublicationStatusYear)",
+                  "groupIdRef": "data-set-group"
+                },
+                {
+                  "exprId": "aea532b5-5fa4-629c-abb3-fa3ad6bcaa37-token",
+                  "expr": "TOKEN",
+                  "exprTokenType": "AND",
+                  "groupIdRef": "data-set-group"
+                },
+                {
+                  "exprId": "3a7943de-e03f-27f5-5955-2226af66d1d7",
+                  "expr": "VALUE",
+                  "ref": "ResearchOutput.filter(hasElectronicVersionDOI)",
+                  "groupIdRef": "data-set-group"
+                },
+                {
+                  "exprId": "data-set-group",
+                  "expr": "GROUP",
+                  "exprGroupType": "EXPR"
+                }
+              ],
+              "advancedFiltersEnabled": false
+            }
+          }
+        ]
+      }
+    ],
+    "dataStory": {
+      "modelType": "dataStoryType",
+      "layout": "list",
+      "grid": {
+        "strategy": "auto",
+        "positions": null
+      },
+      "elements": []
+    }
+  },
+  "idToSave": "437437516"
+}
