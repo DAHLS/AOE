@@ -12,6 +12,7 @@ import argparse
 import warnings
 import datetime
 import joblib
+from pathlib import Path
 warnings.filterwarnings('ignore')
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -60,12 +61,32 @@ ALGORITHM_CONFIGS = {
     }
 }
 
-def load_and_preprocess_data():
-    # This is a placeholder - replace with your actual data loading logic
-    pure_df = pd.read_excel('data/Org_dump-20251020_processed_20251020_172533.xlsx')
+def load_and_preprocess_data(input_file=None):
+    """Load and preprocess data from Excel file.
+    
+    Args:
+        input_file: Path to preprocessed Excel file. If None, uses most recent
+                   file matching *_processed_*.xlsx in data/ directory.
+    
+    Returns:
+        tuple: (texts Series, labels Series)
+    """
+    if input_file is None:
+        # Find most recent processed file in data/ (including subdirectories)
+        data_dir = Path('data')
+        processed_files = list(data_dir.rglob('*_processed_*.xlsx'))
+        if processed_files:
+            input_file = max(processed_files, key=lambda f: f.stat().st_mtime)
+            print(f"Using most recent processed file: {input_file}")
+        else:
+            raise FileNotFoundError(
+                "No processed data files found in data/. "
+                "Run AOE_preprocessing.py first or specify --input."
+            )
+    
+    pure_df = pd.read_excel(input_file)
     texts = pure_df['Text']
     labels = pure_df['Orgs_parents']
-    #[1, 1, 0, 0]  # 1 for positive, 0 for negative
     return texts, labels
 
 def create_bow_features(texts, vectorizer_type='count', 
@@ -205,7 +226,9 @@ def save_results(results, filename='algorithm_comparison.csv'):
 
 def main_with_args():
     parser = argparse.ArgumentParser(description='Compare ML algorithms on AOE data')
-    parser.add_argument('--algo', nargs='+', 
+    parser.add_argument('--input', '-i', type=str, default=None,
+                        help='Path to preprocessed data file (default: latest in data/)')
+    parser.add_argument('--algo', nargs='+',
                        choices=list(ALGORITHM_CONFIGS.keys()) + ['all'],
                        default=['all'], help='Algorithms to test')
     parser.add_argument('--feat', nargs='?', default=None, type=int,
@@ -218,11 +241,11 @@ def main_with_args():
                         default=['n'], help='')
     args = parser.parse_args()
 
-    
+
     # Load and preprocess data
     print("Loading and preprocessing data...")
     try:
-        texts, labels = load_and_preprocess_data()
+        texts, labels = load_and_preprocess_data(input_file=args.input)
         
         # Create bag-of-words features
         y = labels.values

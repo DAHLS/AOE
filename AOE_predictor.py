@@ -13,6 +13,8 @@ import sys
 import os
 import re
 import glob
+import argparse
+from pathlib import Path
 
 
 def select_file_from_directory(directory, file_extension, description,
@@ -93,43 +95,66 @@ def select_file_from_directory(directory, file_extension, description,
 
 # --- Main Script Execution ---
 
-# 1. Check for input data path argument
-if len(sys.argv) < 2:
-    print("Please provide path to data for estimation.")
-    sys.exit()
-data_path = sys.argv[1]
+def main():
+    parser = argparse.ArgumentParser(
+        description='Predict organizational affiliation for publications')
+    parser.add_argument('data_path', help='Path to data for estimation')
+    parser.add_argument('--model', '-m', type=str, default=None,
+                        help='Path to model file (default: interactive selection)')
+    parser.add_argument('--vectorizer', '-v', type=str, default=None,
+                        help='Path to vectorizer file (default: interactive selection)')
+    parser.add_argument('--output-dir', '-o', type=str, default='output',
+                        help='Output directory (default: output/)')
+    args = parser.parse_args()
 
-# 2. Load the input data
-new_df = pd.read_excel(data_path)
-new_df['Text'] = new_df[['AU', 'TI', 'JN']].apply(
-    lambda row: ' '.join(row.dropna().astype(str)), axis=1) # Ensure all parts are strings before joining
+    # 1. Check for input data path argument
+    data_path = args.data_path
 
-# 3. Prompt user to select the model file
-print("\n--- Selecting Model File ---")
-model_path = select_file_from_directory(
-    'models', '.pkl', 'kNN Model',
-    exclude_pattern='tfidf')
+    # 2. Load the input data
+    new_df = pd.read_excel(data_path)
+    new_df['Text'] = new_df[['AU', 'TI', 'JN']].apply(
+        lambda row: ' '.join(row.dropna().astype(str)), axis=1) # Ensure all parts are strings before joining
 
-# 4. Prompt user to select the TF-IDF vectorizer file
-print("\n--- Selecting Vectorizer File ---")
-vectorizer_path = select_file_from_directory(
-    'models', '.pkl', 'TF-IDF Vectorizer',
-    include_pattern='tfidf')
+    # 3. Prompt user to select the model file
+    print("\n--- Selecting Model File ---")
+    if args.model:
+        model_path = args.model
+        print(f"Using specified model: {model_path}")
+    else:
+        model_path = select_file_from_directory(
+            'models', '.pkl', 'kNN Model',
+            exclude_pattern='tfidf')
 
-# 5. Load the selected model and vectorizer
-print(f"\nLoading model from: {model_path}")
-knn = joblib.load(model_path)
-print(f"Loading vectorizer from: {vectorizer_path}")
-vectorizer = joblib.load(vectorizer_path)
+    # 4. Prompt user to select the TF-IDF vectorizer file
+    print("\n--- Selecting Vectorizer File ---")
+    if args.vectorizer:
+        vectorizer_path = args.vectorizer
+        print(f"Using specified vectorizer: {vectorizer_path}")
+    else:
+        vectorizer_path = select_file_from_directory(
+            'models', '.pkl', 'TF-IDF Vectorizer',
+            include_pattern='tfidf')
 
-# 6. Perform the prediction
-X_new = vectorizer.transform(new_df['Text'])
-predicted_labels = knn.predict(X_new)
+    # 5. Load the selected model and vectorizer
+    print(f"\nLoading model from: {model_path}")
+    knn = joblib.load(model_path)
+    print(f"Loading vectorizer from: {vectorizer_path}")
+    vectorizer = joblib.load(vectorizer_path)
 
-# 7. Save the results
-timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-output_filename = f'output/{os.path.basename(data_path).split(".")[0]}_labeled_{timestamp}.xlsx'
-new_df['Predicted_Org_parents'] = predicted_labels
-new_df.to_excel(output_filename, index=False)
+    # 6. Perform the prediction
+    X_new = vectorizer.transform(new_df['Text'])
+    predicted_labels = knn.predict(X_new)
 
-print(f"\nPredictions completed and saved to: {output_filename}")
+    # 7. Save the results
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_filename = output_dir / f'{Path(data_path).stem}_labeled_{timestamp}.xlsx'
+    new_df['Predicted_Org_parents'] = predicted_labels
+    new_df.to_excel(output_filename, index=False)
+
+    print(f"\nPredictions completed and saved to: {output_filename}")
+
+
+if __name__ == "__main__":
+    main()
